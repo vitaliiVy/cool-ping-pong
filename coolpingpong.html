@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="UTF-8">
+<title>Pong 2 Players</title>
+<style>
+  body { margin: 0; background: black; color: white; font-family: Arial; }
+  canvas { display: block; margin: auto; background: #111; }
+</style>
+</head>
+<body>
+
+<canvas id="game" width="800" height="500"></canvas>
+
+<script>
+const canvas = document.getElementById("game");
+const ctx = canvas.getContext("2d");
+
+// Ракетки
+const paddleWidth = 10;
+const paddleHeight = 100;
+
+let player1Y = canvas.height / 2 - paddleHeight / 2;
+let player2Y = canvas.height / 2 - paddleHeight / 2;
+
+const speed = 6;
+
+// М'яч
+let ballX = canvas.width / 2;
+let ballY = canvas.height / 2;
+let ballSize = 10;
+
+let ballSpeedX = 5;
+let ballSpeedY = 3;
+
+// Рахунок
+let score1 = 0;
+let score2 = 0;
+const maxScore = 10;
+
+let gameOver = false;
+
+// Клавіші
+let keys = {};
+
+document.addEventListener("keydown", (e) => {
+  keys[e.key] = true;
+});
+
+document.addEventListener("keyup", (e) => {
+  keys[e.key] = false;
+});
+
+// Скидання м'яча
+function resetBall() {
+  ballX = canvas.width / 2;
+  ballY = canvas.height / 2;
+  ballSpeedX = (Math.random() > 0.5 ? 5 : -5);
+  ballSpeedY = (Math.random() > 0.5 ? 3 : -3);
+}
+
+// Оновлення
+function update() {
+  if (gameOver) return;
+
+  // Рух
+  if (keys["w"]) player1Y -= speed;
+  if (keys["s"]) player1Y += speed;
+  if (keys["ArrowUp"]) player2Y -= speed;
+  if (keys["ArrowDown"]) player2Y += speed;
+
+  // Межі
+  player1Y = Math.max(0, Math.min(canvas.height - paddleHeight, player1Y));
+  player2Y = Math.max(0, Math.min(canvas.height - paddleHeight, player2Y));
+
+  // М'яч
+  ballX += ballSpeedX;
+  ballY += ballSpeedY;
+
+  // Стіни
+  if (ballY <= 0 || ballY >= canvas.height) {
+    ballSpeedY *= -1;
+  }
+
+  // Зіткнення
+  if (
+    ballX <= paddleWidth &&
+    ballY > player1Y &&
+    ballY < player1Y + paddleHeight
+  ) {
+    ballSpeedX *= -1;
+  }
+
+  if (
+    ballX >= canvas.width - paddleWidth &&
+    ballY > player2Y &&
+    ballY < player2Y + paddleHeight
+  ) {
+    ballSpeedX *= -1;
+  }
+
+  // Гол
+  if (ballX < 0) {
+    score2++;
+    resetBall();
+  }
+
+  if (ballX > canvas.width) {
+    score1++;
+    resetBall();
+  }
+
+  // Перемога
+  if (score1 >= maxScore || score2 >= maxScore) {
+    gameOver = true;
+  }
+}
+
+// Малювання
+function draw() {
+  ctx.fillStyle = "#111";
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  ctx.fillStyle = "white";
+  ctx.font = "30px Arial";
+
+  // Рахунок
+  ctx.fillText(score1, canvas.width / 4, 50);
+  ctx.fillText(score2, canvas.width * 3 / 4, 50);
+
+  // Ракетки
+  ctx.fillRect(0, player1Y, paddleWidth, paddleHeight);
+  ctx.fillRect(canvas.width - paddleWidth, player2Y, paddleWidth, paddleHeight);
+
+  // М'яч
+  ctx.fillRect(ballX, ballY, ballSize, ballSize);
+
+  // Переможець
+  if (gameOver) {
+    ctx.font = "40px Arial";
+    let text = score1 > score2 ? "Гравець 1 переміг!" : "Гравець 2 переміг!";
+    ctx.fillText(text, canvas.width / 2 - 180, canvas.height / 2);
+  }
+}
+
+// Цикл
+function gameLoop() {
+  update();
+  draw();
+  requestAnimationFrame(gameLoop);
+}
+
+gameLoop();
+</script>
+
+</body>
+</html>
